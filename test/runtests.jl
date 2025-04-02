@@ -47,7 +47,7 @@ function test2()
     a = rand(10)
     tempvec2 = Temporalarray(a; num=4, haslabel=true)
     t, i = new_temp_withlabel(tempvec2, "cat")
-    t .= zeros(10)
+    t .= ones(10) * 100
     display(tempvec2)
     println("---------------------")
 
@@ -58,11 +58,28 @@ function test2()
 
     unused!(tempvec2, i2)
     t3, i3 = new_temp_withlabel(tempvec2, "bird")
-    t3 .= zeros(10)
+    t3 .= ones(10)
     display(tempvec2)
 
 
+    t4, i4 = load_temp_withlabel(tempvec2, "bird")
+    display(t4)
 
+    t4, i4 = load_temp_withlabel(tempvec2, "cat")
+    display(t4)
+
+
+
+    println("---------------------")
+    a = rand(10)
+    tempvec2 = Temporalarray(a; labeltype=Symbol, num=4, haslabel=true)
+    t, i = new_temp_withlabel(tempvec2, :cat)
+    t .= ones(10) * 120
+    display(tempvec2)
+
+    t4, i4 = load_temp_withlabel(tempvec2, :cat)
+    display(t4)
+    println("---------------------")
 end
 
 
