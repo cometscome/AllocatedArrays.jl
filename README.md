@@ -28,7 +28,7 @@ If the package is registered (for example):
 
 ```julia
 using Pkg
-Pkg.add(url="https://github.com/YourUserName/TemporalArrays.jl")
+Pkg.add(url="https://github.com/cometscome/TemporalArrays.jl")
 ```
 
 ## Basic Usage
