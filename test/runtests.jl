@@ -31,10 +31,44 @@ function test()
     display(tempvec2)
     println("---------------------")
     #vecd = tempvec2[3:10]
+
+
+end
+
+function test2()
+    println("---------------------")
+    a = rand(10)
+    tempvec2 = Temporalarray(a; num=4, haslabel=false)
+    t, i = get_temp(tempvec2)
+    t .= ones(10)
+    display(tempvec2)
+    println("---------------------")
+
+    a = rand(10)
+    tempvec2 = Temporalarray(a; num=4, haslabel=true)
+    t, i = new_temp_withlabel(tempvec2, "cat")
+    t .= zeros(10)
+    display(tempvec2)
+    println("---------------------")
+
+    t2, i2 = new_temp_withlabel(tempvec2, "dog")
+    t2 .= zeros(10)
+    display(tempvec2)
+    println("---------------------")
+
+    unused!(tempvec2, i2)
+    t3, i3 = new_temp_withlabel(tempvec2, "bird")
+    t3 .= zeros(10)
+    display(tempvec2)
+
+
+
 end
 
 
 @testset "TemporalArrays.jl" begin
     # Write your tests here.
     test()
+
+    test2()
 end
