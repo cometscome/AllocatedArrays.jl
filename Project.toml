@@ -1,0 +1,13 @@
+name = "TemporalArrays"
+uuid = "f9710d63-ac16-4fea-bcef-3ac1fb623b0a"
+authors = ["Yuki Nagai <cometscome@gmail.com>"]
+version = "1.0.0-DEV"
+
+[compat]
+julia = "1.6.7"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
