@@ -5,7 +5,8 @@
 
 
 **AllocatedArrays.jl** is a Julia package that provides a convenient way to manage and reuse allocated blocks of array data. It is particularly useful when you need to allocate many arrays of the same shape or size, and want to reduce overhead by reusing existing allocations.
----
+
+
 
 ## Installation
 
