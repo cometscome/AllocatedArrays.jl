@@ -100,28 +100,28 @@ Constructor function to create an ```PreallocatedArray``` with optional argument
 -	```reusemode::Bool``` – if true, allows reusing a block without raising an error.
 
 
-### 2. ```get_block(allocated_array)```
+### 2. ```get_block(preallocated_array)```
 
 Fetches one unused block and returns ```(block, index)```. If there are no unused blocks, it expands the array up to Nmax.
 
-### 3. ```get_block(allocated_array, num::Int)```
+### 3. ```get_block(preallocated_array, num::Int)```
 
 Fetches num unused blocks and returns ```(blocks, indices)```, where blocks is a vector of blocks, and indices is a vector of the corresponding indices.
 
-### 4. ```new_block_withlabel(allocated_array, label)```
+### 4. ```new_block_withlabel(preallocated_array, label)```
 
 Fetches one unused block and *assigns* the label provided. Returns ```(block, index)```. If the label already exists, it raises an error.
 
-### 5. ```load_block_withlabel(allocated_array, label)```
+### 5. ```load_block_withlabel(preallocated_array, label)```
 
 Returns the block previously assigned to ```label```. Raises an error if the label was not set.
 
-### 6. ```unused!(allocated_array, index)```
+### 6. ```unused!(preallocated_array, index)```
 
 Marks a block at a given index as no longer in use. There are also methods to mark multiple indices or *all* blocks as unused.
 
 
-### 7. ```set_reusemode!(allocated_array, reusemode)```
+### 7. ```set_reusemode!(preallocated_array, reusemode)```
 
 Enables or disables reusing a block. If ```reusemode``` is disabled, trying to get a block at an index already in use triggers an error.
 
