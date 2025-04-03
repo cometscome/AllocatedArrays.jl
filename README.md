@@ -16,10 +16,13 @@
 
 ## Main Features
 
-	-	**AllocatedArray** type to store preallocated blocks.
-	-	**On-demand expansion** of the number of blocks if you request an index larger than the current capacity (up to a user-defined Nmax).
-	-	**Optional label system** to identify and retrieve blocks by label.
-	-	Functions to handle usage flags, track which blocks are currently “in use,” and mark them as unused.
+-	**AllocatedArray** type to store preallocated blocks.
+
+-	**On-demand expansion** of the number of blocks if you request an index larger than the current capacity (up to a user-defined Nmax).
+
+-	**Optional label system** to identify and retrieve blocks by label.
+
+-	Functions to handle usage flags, track which blocks are currently “in use,” and mark them as unused.
 
 ## Usage
 
@@ -90,11 +93,11 @@ display(blockvec_labeled)
 ### 1. ```AllocatedArray```
 
 Constructor function to create an ```AllocatedArray``` with optional arguments for:
-	-	```num::Int``` – initial number of preallocated blocks
-	-	```haslabel::Bool``` – whether to enable label storage
-	-	```labeltype``` – the type of labels to store (by default ```String```, can be ```Symbol```, etc.)
-	-	```Nmax::Int``` – maximum capacity for the allocated array
-	-	```reusemode::Bool``` – if true, allows reusing a block without raising an error.
+-	```num::Int``` – initial number of preallocated blocks
+-	```haslabel::Bool``` – whether to enable label storage
+-	```labeltype``` – the type of labels to store (by default ```String```, can be ```Symbol```, etc.)
+-	```Nmax::Int``` – maximum capacity for the allocated array
+-	```reusemode::Bool``` – if true, allows reusing a block without raising an error.
 
 
 ### 2. ```get_block(allocated_array)```
