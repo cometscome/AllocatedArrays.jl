@@ -1,140 +1,123 @@
 
-# TemporalArrays.jl
+# AllocatedArrays.jl
 
-[![Build Status](https://github.com/cometscome/TemporalArrays.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/cometscome/TemporalArrays.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Build Status](https://github.com/cometscome/AllocatedArrays.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/cometscome/AllocatedArrays.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 
-**TemporalArrays.jl** is a Julia package providing a flexible data structure for allocating, labeling, and reusing array blocks in memory. It is particularly useful in scenarios where you need to frequently allocate and deallocate blocks but want to minimize memory churn.
-
----
-
-## Features
-
-- **Flexible data storage**: Allocate one or more “temporal fields” (array blocks) from a base array/vector.
-- **Optional labeling**: Associate each block with a label (e.g., `String`, `Symbol`) for easier retrieval.
-- **Minimal memory churn**: Mark blocks as “unused” and reuse them later.
-- **Key API**:
-  - `Temporalarray(...)` for constructing a temporal array
-  - **`get_temp(t::Temporalarray)`** to find and reserve an *unused* block
-  - `new_temp_withlabel` / `load_temp_withlabel` to manage labeled blocks
-  - `unused!` to free blocks
-  - `set_reusemode!` to allow reusing blocks without explicit freeing
-
+**AllocatedArrays.jl** is a Julia package that provides a convenient way to manage and reuse allocated blocks of array data. It is particularly useful when you need to allocate many arrays of the same shape or size, and want to reduce overhead by reusing existing allocations.
 ---
 
 ## Installation
 
-If the package is registered (for example):
-
 ```julia
-using Pkg
-Pkg.add(url="https://github.com/YourUserName/TemporalArrays.jl")
+] add https://github.com/cometscome/AllocatedArrays.jl
 ```
 
-## Basic Usage
+## Main Features
 
-### Creating a temporal array
+	-	**AllocatedArray** type to store preallocated blocks.
+	-	**On-demand expansion** of the number of blocks if you request an index larger than the current capacity (up to a user-defined Nmax).
+	-	**Optional label system** to identify and retrieve blocks by label.
+	-	Functions to handle usage flags, track which blocks are currently “in use,” and mark them as unused.
+
+## Usage
+
+Below are some basic usage examples. For a more extensive reference, refer to the [tests](https://github.com/cometscome/AllocatedArrays.jl/blob/main/test/runtests.jl).
+
+### Basic Allocation & Retrieval
+
 ```julia
-using TemporalArrays
+using AllocatedArrays
 
-# Create a temporal array from a Vector-like object
-data = rand(10)
-tempvec = Temporalarray(data)
+# Create a 3×3 random matrix
+a = rand(3, 3)
 
-# Access/allocate the first block
-block1 = tempvec[1]
-block1 .= 1.0  # Fill it with data
+# Create an AllocatedArray with 4 preallocated blocks of the same size
+blockvec = AllocatedArray(a; num=4, haslabel=false)
+
+# Request one block from the pool
+data_block, index = get_block(blockvec)
+
+# Use the block
+data_block .= 1.0  # fill with ones
+
+# Mark the block as unused when you're done
+unused!(blockvec, index)
 ```
 
-### Freeing and Reusing Blocks
+### Labels
 
 ```julia
-# Mark a used block as unused
-unused!(tempvec, 1)
+using AllocatedArrays
 
-# Acquire a fresh (or reused) block via get_temp
-block2, idx2 = get_temp(tempvec)
-block2 .= 2.0
-```
-
-### Enabling Reuse Mode
-```julia
-set_reusemode!(tempvec, true)
-block3 = tempvec[1]  # Reuse block #1 without calling unused! first
-```
-
-## Using Labels
-
-Enable labeling with ```haslabel=true``` to associate each block with a custom label:
-
-```julia
-tempvec_labeled = Temporalarray(rand(10); num=4, haslabel=true)
-
-# Acquire a fresh block with a label
-tcat, cat_index = new_temp_withlabel(tempvec_labeled, "cat")
-tcat .= 100.0
-
-# Retrieve by label
-loaded_cat, idx_cat = load_temp_withlabel(tempvec_labeled, "cat")
-
-# Mark as unused when done
-unused!(tempvec_labeled, idx_cat)
-```
-
-## Important Function: get_temp
-
-```get_temp(t::Temporalarray)``` searches for the first unused block and returns both the block and its index:
-
-```julia
-block, idx = get_temp(mytemparray)
-```
-
--	If all blocks are in use, a warning is printed, and it may create a new block if you haven’t reached the Nmax limit.
--	Use this for dynamic allocation whenever you need a new chunk of memory.
-
-You can also get multiple blocks at once:
-
-```julia
-blocks, indices = get_temp(mytemparray, 3)
-```
-
-## Example from runtest.jl
-
-A simplified example from the test suite:
-
-```julia
-using TemporalArrays
-
-# 1) Create
+# Create a 10-element random vector
 a = rand(10)
-tempvec = Temporalarray(a)
-block1 = tempvec[1]
-println("Block1: ", block1)
 
-# 2) Pre-allocate multiple blocks
-tempvec2 = Temporalarray(a; num=4)
-blockA = tempvec2[1]
-blockB = tempvec2[2]
-unused!(tempvec2, 2)
+# Create an AllocatedArray with 4 labeled blocks
+blockvec2 = AllocatedArray(a; num=4, haslabel=true)
 
-# 3) Using get_temp
-blockC, idxC = get_temp(tempvec2)
-println("Acquired block index: ", idxC)
+# Request a block by label
+block, idx = new_block_withlabel(blockvec2, "cat")
+block .= 100.0
 
-# 4) Labeled usage
-tempvec_label = Temporalarray(a; num=4, haslabel=true)
-tcat, icat = new_temp_withlabel(tempvec_label, "cat")
-tcat .= 100
-loaded, idx_loaded = load_temp_withlabel(tempvec_label, "cat")
-println("Loaded cat block: ", loaded)
-unused!(tempvec_label, idx_loaded)
+# Later, you can retrieve that same block by its label
+same_block, same_idx = load_block_withlabel(blockvec2, "cat")
+@assert block === same_block  # They are the same array reference
 ```
 
-## Other Constructors
+## Creating from Vectors of Arrays
 
--	```Temporalarray_fromvector(a::Vector{TG}; Nmax=1000, reusemode=false)```
-Create a ```Temporalarray``` from a vector of array-like objects (unlabeled).
--	```Temporalarray_fromvector(a::Vector{TG}, labels::Vector{TL}; Nmax=1000, reusemode=false)```
-Create a labeled ```Temporalarray``` from a vector of data blocks and their labels.
+```julia
+using AllocatedArrays
 
+# Suppose you have a vector of 10 Float64 vectors
+data = [rand(4) for i in 1:10]
+
+# Create an AllocatedArray from an existing vector of arrays
+blockvec = AllocatedArray(data)
+
+# Also supports labeling
+labels = ["$(i)-th" for i in 1:10]
+blockvec_labeled = AllocatedArray(data, labels)
+
+# Display usage information
+display(blockvec_labeled)
+```
+
+## Important Functions
+
+### 1. ```AllocatedArray```
+
+Constructor function to create an ```AllocatedArray``` with optional arguments for:
+	-	```num::Int``` – initial number of preallocated blocks
+	-	```haslabel::Bool``` – whether to enable label storage
+	-	```labeltype``` – the type of labels to store (by default ```String```, can be ```Symbol```, etc.)
+	-	```Nmax::Int``` – maximum capacity for the allocated array
+	-	```reusemode::Bool``` – if true, allows reusing a block without raising an error.
+
+
+### 2. ```get_block(allocated_array)```
+
+Fetches one unused block and returns ```(block, index)```. If there are no unused blocks, it expands the array up to Nmax.
+
+### 3. ```get_block(allocated_array, num::Int)```
+
+Fetches num unused blocks and returns ```(blocks, indices)```, where blocks is a vector of blocks, and indices is a vector of the corresponding indices.
+
+### 4. ```new_block_withlabel(allocated_array, label)```
+
+Fetches one unused block and *assigns* the label provided. Returns ```(block, index)```. If the label already exists, it raises an error.
+
+### 5. ```load_block_withlabel(allocated_array, label)```
+
+Returns the block previously assigned to ```label```. Raises an error if the label was not set.
+
+### 6. ```unused!(allocated_array, index)```
+
+Marks a block at a given index as no longer in use. There are also methods to mark multiple indices or *all* blocks as unused.
+
+
+### 7. ```set_reusemode!(allocated_array, reusemode)```
+
+Enables or disables reusing a block. If ```reusemode``` is disabled, trying to get a block at an index already in use triggers an error.
 

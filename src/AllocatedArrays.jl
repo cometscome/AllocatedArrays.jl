@@ -1,6 +1,6 @@
-module TemporalArrays
+module AllocatedArrays
 
-mutable struct Temporalarray{TG,TL,haslabel}
+mutable struct AllocatedArray{TG,TL,haslabel}
     _data::Vector{TG}
     _labels::Vector{TL}
     _flagusing::Vector{Bool}
@@ -10,7 +10,8 @@ mutable struct Temporalarray{TG,TL,haslabel}
     const _haslabel::Bool
 
 
-    function Temporalarray(a::TG; labeltype=String, haslabel=false, num=1, Nmax=1000, reusemode=false) where {TG}
+    function AllocatedArray(a::TG;
+        labeltype=String, haslabel=false, num=1, Nmax=1000, reusemode=false) where {TG}
         _data = Vector{TG}(undef, num)
         TL = Union{Nothing,labeltype}
         if haslabel
@@ -32,55 +33,63 @@ mutable struct Temporalarray{TG,TL,haslabel}
 
 
 
-    function Temporalarray(_data::Vector{TG}, _labels::Vector{TL}, _flagusing, _indices, Nmax, _reusemode) where {TG,TL}
+    function AllocatedArray(_data::Vector{TG}, _labels::Vector{TL}, _flagusing, _indices, Nmax, _reusemode) where {TG,TL}
         _haslabel = true
         return new{TG,TL,_haslabel}(_data, _labels, _flagusing, _indices, Nmax, _reusemode, _haslabel)
     end
 
-    function Temporalarray(_data::Vector{TG}, _flagusing, _indices, Nmax, _reusemode) where {TG}
-        _labels = String[]
+    function AllocatedArray(_data::Vector{TG}, _flagusing, _indices, Nmax, _reusemode) where {TG}
+
         _haslabel = false
+        TL = Union{Nothing,String}
+        _labels = TL[]
         return new{TG,TL,_haslabel}(_data, _labels, _flagusing, _indices, Nmax, _reusemode, _haslabel)
     end
+
+    function AllocatedArray(a::AbstractVector{TG};
+        Nmax=1000, reusemode=false) where {TG<:AbstractVector}
+        num = length(a)
+        _flagusing = ones(Bool, num)
+        _indices = collect(1:num)
+        return AllocatedArray(a, _flagusing, _indices, Nmax, reusemode)
+    end
+
+    function AllocatedArray(a::AbstractVector{TG}, labels::AbstractVector{labeltype};
+        Nmax=1000, reusemode=false) where {TG<:AbstractVector,labeltype}
+        num = length(a)
+
+        TL = Union{Nothing,labeltype}
+        _labels = Vector{TL}(undef, num)
+        _labels .= labels
+        _flagusing = ones(Bool, num)
+        _indices = collect(1:num)
+        return AllocatedArray(a, _flagusing, _indices, Nmax, reusemode)
+    end
+
 end
 
 
-
-function Temporalarray_fromvector(a::Vector{TG}; Nmax=1000, reusemode=false) where {TG}
-    num = length(a)
-    _flagusing = zeros(Bool, num)
-    _indices = zeros(Int64, num)
-    return Temporalarray(a, _flagusing, _indices, Nmax, reusemode)
-end
-function Temporalarray_fromvector(a::Vector{TG}, labels::Vector{TL}; Nmax=1000, reusemode=false) where {TG,TL}
-    num = length(a)
-    _flagusing = zeros(Bool, num)
-    _indices = zeros(Int64, num)
-    return Temporalarray(a, labels, _flagusing, _indices, Nmax, reusemode)
-end
-export Temporalarray_fromvector
-
-set_reusemode!(t::Temporalarray, reusemode) = t._reusemode = reusemode
+set_reusemode!(t::AllocatedArray, reusemode) = t._reusemode = reusemode
 export set_reusemode!
 
-Base.eltype(::Type{Temporalarray{TG}}) where {TG} = TG
+Base.eltype(::Type{AllocatedArray{TG}}) where {TG} = TG
 
-Base.length(t::Temporalarray) = length(t._data)
+Base.length(t::AllocatedArray) = length(t._data)
 
-Base.size(t::Temporalarray) = size(t._data)
+Base.size(t::AllocatedArray) = size(t._data)
 
-function Base.firstindex(::Temporalarray)
+function Base.firstindex(::AllocatedArray)
     return 1
 end
 
-function Base.lastindex(t::Temporalarray)
+function Base.lastindex(t::AllocatedArray)
     return length(t._data)
 end
 
-function Base.getindex(t::Temporalarray{TG}, i::Int) where {TG}
+function Base.getindex(t::AllocatedArray{TG}, i::Int) where {TG}
     #display(t)
     if i > length(t._data)
-        @warn "The length of the Temporalarray is shorter than the index $i. New temporal fields are created."
+        @warn "The length of the AllocatedArray is shorter than the index $i. New temporal fields are created."
         ndiff = i - length(t._data)
         @assert i <= t.Nmax "The number of the tempralfields $i is larger than the maximum number $(Nmax). Change Nmax."
         for n = 1:ndiff
@@ -102,7 +111,7 @@ function Base.getindex(t::Temporalarray{TG}, i::Int) where {TG}
     return t._data[t._indices[i]]
 end
 
-function Base.getindex(t::Temporalarray{TG}, I::Vararg{Int,N}) where {TG,N}
+function Base.getindex(t::AllocatedArray{TG}, I::Vararg{Int,N}) where {TG,N}
     data = TG[]
     for i in I
         push!(data, t[i])
@@ -110,7 +119,7 @@ function Base.getindex(t::Temporalarray{TG}, I::Vararg{Int,N}) where {TG,N}
     return data
 end
 
-function Base.getindex(t::Temporalarray{TG}, I::AbstractVector{T}) where {TG,T<:Integer}
+function Base.getindex(t::AllocatedArray{TG}, I::AbstractVector{T}) where {TG,T<:Integer}
     data = TG[]
     for i in I
         push!(data, t[i])
@@ -118,7 +127,7 @@ function Base.getindex(t::Temporalarray{TG}, I::AbstractVector{T}) where {TG,T<:
     return data
 end
 
-function Base.display(t::Temporalarray{TG,TF,false}) where {TG,TF}
+function Base.display(t::AllocatedArray{TG,TF,false}) where {TG,TF}
     n = length(t._data)
     println("The total number of fields: $n")
     numused = sum(t._flagusing)
@@ -133,7 +142,7 @@ function Base.display(t::Temporalarray{TG,TF,false}) where {TG,TF}
     println("The indices: $(t._indices)")
 end
 
-function Base.display(t::Temporalarray{TG,TF,true}) where {TG,TF}
+function Base.display(t::AllocatedArray{TG,TF,true}) where {TG,TF}
     n = length(t._data)
     println("The total number of fields: $n")
     numused = sum(t._flagusing)
@@ -149,20 +158,19 @@ function Base.display(t::Temporalarray{TG,TF,true}) where {TG,TF}
     println("The labels: $(t._labels)")
 end
 
-function get_temp(t::Temporalarray{TG}) where {TG}
+function get_block(t::AllocatedArray{TG}) where {TG}
     n = length(t._data)
     i = findfirst(x -> x == 0, t._indices)
     if i == nothing
-        @warn "All $n temporal fields are used. New one is created. Usually, this means that something is wrong."
-        #error("All $n temporal fields are used. New one is created.")
+        @warn "All $n blocks are used. New one is created. Usually, this means that something is wrong."
         i = n + 1
     end
 
     return t[i], i
 end
 
-function new_temp_withlabel(t::Temporalarray{TG,TL,true}, label::TL) where {TG,TL}
-    ti, i = get_temp(t)
+function new_block_withlabel(t::AllocatedArray{TG,TL,true}, label::TL) where {TG,TL}
+    ti, i = get_block(t)
     #not_undef = [i for i in eachindex(t._labels) if isassigned(t._labels, i)]
     #println(label)
     index = findfirst(x -> x == label, t._labels)
@@ -173,38 +181,38 @@ function new_temp_withlabel(t::Temporalarray{TG,TL,true}, label::TL) where {TG,T
     return ti, i
 end
 
-function new_temp_withlabel(t::Temporalarray{TG,TL,false}, label::TL) where {TG,TL}
-    error("the temporalarray has no label.")
+function new_block_withlabel(t::AllocatedArray{TG,TL,false}, label::TL) where {TG,TL}
+    error("the AllocatedArray has no label.")
 end
-export new_temp_withlabel
+export new_block_withlabel
 
-function load_temp_withlabel(t::Temporalarray{TG,TL,true}, label::TL) where {TG,TL}
+function load_block_withlabel(t::AllocatedArray{TG,TL,true}, label::TL) where {TG,TL}
     #not_undef = [i for i in eachindex(t._labels) if isassigned(t._labels, i)]
     index = findfirst(x -> x == label, t._labels)
     @assert index !== nothing "this label $(label) was not set! Something is wrong"
     ti = t._data[index]
     return ti, index
 end
-export load_temp_withlabel
+export load_block_withlabel
 
-function load_temp_withlabel(t::Temporalarray{TG,TL,false}, label::TL) where {TG,TL}
-    error("the temporalarray has no label.")
+function load_block_withlabel(t::AllocatedArray{TG,TL,false}, label::TL) where {TG,TL}
+    error("the AllocatedArray has no label.")
 end
 
 
-function get_temp(t::Temporalarray{TG}, num) where {TG}
+function get_block(t::AllocatedArray{TG}, num) where {TG}
     n = length(t._data)
     i_s = Int64[]
     t_s = TG[]
     for k = 1:num
-        tk, i = get_temp(t)
+        tk, i = get_block(t)
         push!(t_s, tk)
         push!(i_s, i)
     end
     return t_s, i_s
 end
 
-function unused!(t::Temporalarray{TG}, i) where {TG}
+function unused!(t::AllocatedArray{TG}, i) where {TG}
     if t._indices[i] != 0
         index = t._indices[i]
         t._flagusing[index] = false
@@ -213,19 +221,19 @@ function unused!(t::Temporalarray{TG}, i) where {TG}
 end
 
 
-function unused!(t::Temporalarray{TG}, I::AbstractVector{T}) where {TG,T<:Integer}
+function unused!(t::AllocatedArray{TG}, I::AbstractVector{T}) where {TG,T<:Integer}
     for i in I
         unused!(t, i)
     end
 end
 
-function unused!(t::Temporalarray{TG}) where {TG}
+function unused!(t::AllocatedArray{TG}) where {TG}
     for i = 1:length(t)
         unused!(t, i)
     end
 end
 
 
-export Temporalarray, unused!, get_temp
+export AllocatedArray, unused!, get_block
 
 end

@@ -1,4 +1,4 @@
-name = "TemporalArrays"
+name = "AllocatedArrays"
 uuid = "f9710d63-ac16-4fea-bcef-3ac1fb623b0a"
 authors = ["Yuki Nagai <cometscome@gmail.com>"]
 version = "0.0.1"
