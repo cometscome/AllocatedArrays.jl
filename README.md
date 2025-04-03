@@ -1,22 +1,22 @@
 
-# AllocatedArrays.jl
+# PreallocatedArrays.jl
 
-[![Build Status](https://github.com/cometscome/AllocatedArrays.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/cometscome/AllocatedArrays.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Build Status](https://github.com/cometscome/PreallocatedArrays.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/cometscome/PreallocatedArrays.jl/actions/workflows/CI.yml?query=branch%3Amain)
 
 
-**AllocatedArrays.jl** is a Julia package that provides a convenient way to manage and reuse allocated blocks of array data. It is particularly useful when you need to allocate many arrays of the same shape or size, and want to reduce overhead by reusing existing allocations.
+**PreallocatedArrays.jl** is a Julia package that provides a convenient way to manage and reuse allocated blocks of array data. It is particularly useful when you need to allocate many arrays of the same shape or size, and want to reduce overhead by reusing existing allocations.
 
 
 
 ## Installation
 
 ```julia
-] add https://github.com/cometscome/AllocatedArrays.jl
+] add https://github.com/cometscome/PreallocatedArrays.jl
 ```
 
 ## Main Features
 
--	**AllocatedArray** type to store preallocated blocks.
+-	**PreallocatedArray** type to store preallocated blocks.
 
 -	**On-demand expansion** of the number of blocks if you request an index larger than the current capacity (up to a user-defined Nmax).
 
@@ -26,18 +26,18 @@
 
 ## Usage
 
-Below are some basic usage examples. For a more extensive reference, refer to the [tests](https://github.com/cometscome/AllocatedArrays.jl/blob/main/test/runtests.jl).
+Below are some basic usage examples. For a more extensive reference, refer to the [tests](https://github.com/cometscome/PreallocatedArrays.jl/blob/main/test/runtests.jl).
 
 ### Basic Allocation & Retrieval
 
 ```julia
-using AllocatedArrays
+using PreallocatedArrays
 
 # Create a 3×3 random matrix
 a = rand(3, 3)
 
-# Create an AllocatedArray with 4 preallocated blocks of the same size
-blockvec = AllocatedArray(a; num=4, haslabel=false)
+# Create an PreallocatedArray with 4 preallocated blocks of the same size
+blockvec = PreallocatedArray(a; num=4, haslabel=false)
 
 # Request one block from the pool
 data_block, index = get_block(blockvec)
@@ -52,13 +52,13 @@ unused!(blockvec, index)
 ### Labels
 
 ```julia
-using AllocatedArrays
+using PreallocatedArrays
 
 # Create a 10-element random vector
 a = rand(10)
 
-# Create an AllocatedArray with 4 labeled blocks
-blockvec2 = AllocatedArray(a; num=4, haslabel=true)
+# Create an PreallocatedArray with 4 labeled blocks
+blockvec2 = PreallocatedArray(a; num=4, haslabel=true)
 
 # Request a block by label
 block, idx = new_block_withlabel(blockvec2, "cat")
@@ -72,17 +72,17 @@ same_block, same_idx = load_block_withlabel(blockvec2, "cat")
 ## Creating from Vectors of Arrays
 
 ```julia
-using AllocatedArrays
+using PreallocatedArrays
 
 # Suppose you have a vector of 10 Float64 vectors
 data = [rand(4) for i in 1:10]
 
-# Create an AllocatedArray from an existing vector of arrays
-blockvec = AllocatedArray(data)
+# Create an PreallocatedArray from an existing vector of arrays
+blockvec = PreallocatedArray(data)
 
 # Also supports labeling
 labels = ["$(i)-th" for i in 1:10]
-blockvec_labeled = AllocatedArray(data, labels)
+blockvec_labeled = PreallocatedArray(data, labels)
 
 # Display usage information
 display(blockvec_labeled)
@@ -90,9 +90,9 @@ display(blockvec_labeled)
 
 ## Important Functions
 
-### 1. ```AllocatedArray```
+### 1. ```PreallocatedArray```
 
-Constructor function to create an ```AllocatedArray``` with optional arguments for:
+Constructor function to create an ```PreallocatedArray``` with optional arguments for:
 -	```num::Int``` – initial number of preallocated blocks
 -	```haslabel::Bool``` – whether to enable label storage
 -	```labeltype``` – the type of labels to store (by default ```String```, can be ```Symbol```, etc.)

@@ -1,9 +1,9 @@
-using AllocatedArrays
+using PreallocatedArrays
 using Test
 
 function test1()
     a = rand(3, 3)
-    blockvec = AllocatedArray(a; num=4, haslabel=false)
+    blockvec = PreallocatedArray(a; num=4, haslabel=false)
     a1, id1 = get_block(blockvec)
     a1 .= ones(3, 3)
     a2, id2 = get_block(blockvec)
@@ -25,14 +25,14 @@ end
 function test2()
     println("---------------------")
     a = rand(10)
-    blockvec2 = AllocatedArray(a; num=4, haslabel=false)
+    blockvec2 = PreallocatedArray(a; num=4, haslabel=false)
     t, i = get_block(blockvec2)
     t .= ones(10)
     display(blockvec2)
     println("---------------------")
 
     a = rand(10)
-    blockvec2 = AllocatedArray(a; num=4, haslabel=true)
+    blockvec2 = PreallocatedArray(a; num=4, haslabel=true)
     t, i = new_block_withlabel(blockvec2, "cat")
     t .= ones(10) * 100
     display(blockvec2)
@@ -59,7 +59,7 @@ function test2()
 
     println("---------------------")
     a = rand(10)
-    blockvec2 = AllocatedArray(a; labeltype=Symbol, num=4, haslabel=true)
+    blockvec2 = PreallocatedArray(a; labeltype=Symbol, num=4, haslabel=true)
     t, i = new_block_withlabel(blockvec2, :cat)
     t .= ones(10) * 120
     display(blockvec2)
@@ -76,7 +76,7 @@ function test3()
     for i = 1:10
         push!(data, rand(4))
     end
-    blockvec = AllocatedArray(data)
+    blockvec = PreallocatedArray(data)
     display(blockvec)
 
     data2 = Vector{Float64}[]
@@ -85,7 +85,7 @@ function test3()
         push!(data2, rand(8))
         push!(labels, "$(i)-th")
     end
-    blockvec2 = AllocatedArray(data, labels)
+    blockvec2 = PreallocatedArray(data, labels)
     display(blockvec2)
 
     return true
@@ -93,7 +93,7 @@ end
 
 function test4()
     a = rand(10)
-    blockvec = AllocatedArray(a)
+    blockvec = PreallocatedArray(a)
     display(blockvec)
     b = blockvec[1]
     println(b)
@@ -102,7 +102,7 @@ function test4()
     println(c)
     display(blockvec)
 
-    blockvec2 = AllocatedArray(a; num=4)
+    blockvec2 = PreallocatedArray(a; num=4)
     d1 = blockvec2[1]
     println(d1)
     display(blockvec2)
@@ -125,7 +125,7 @@ function test4()
     return true
 end
 
-@testset "AllocatedArrays.jl" begin
+@testset "PreallocatedArrays.jl" begin
     # Write your tests here.
     println("---------------------")
     println("---------------------")

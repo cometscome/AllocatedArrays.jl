@@ -1,6 +1,6 @@
-module AllocatedArrays
+module PreallocatedArrays
 
-mutable struct AllocatedArray{TG,TL,haslabel}
+mutable struct PreallocatedArray{TG,TL,haslabel}
     _data::Vector{TG}
     _labels::Vector{TL}
     _flagusing::Vector{Bool}
@@ -10,7 +10,7 @@ mutable struct AllocatedArray{TG,TL,haslabel}
     const _haslabel::Bool
 
 
-    function AllocatedArray(a::TG;
+    function PreallocatedArray(a::TG;
         labeltype=String, haslabel=false, num=1, Nmax=1000, reusemode=false) where {TG}
         _data = Vector{TG}(undef, num)
         TL = Union{Nothing,labeltype}
@@ -33,12 +33,12 @@ mutable struct AllocatedArray{TG,TL,haslabel}
 
 
 
-    function AllocatedArray(_data::Vector{TG}, _labels::Vector{TL}, _flagusing, _indices, Nmax, _reusemode) where {TG,TL}
+    function PreallocatedArray(_data::Vector{TG}, _labels::Vector{TL}, _flagusing, _indices, Nmax, _reusemode) where {TG,TL}
         _haslabel = true
         return new{TG,TL,_haslabel}(_data, _labels, _flagusing, _indices, Nmax, _reusemode, _haslabel)
     end
 
-    function AllocatedArray(_data::Vector{TG}, _flagusing, _indices, Nmax, _reusemode) where {TG}
+    function PreallocatedArray(_data::Vector{TG}, _flagusing, _indices, Nmax, _reusemode) where {TG}
 
         _haslabel = false
         TL = Union{Nothing,String}
@@ -46,15 +46,15 @@ mutable struct AllocatedArray{TG,TL,haslabel}
         return new{TG,TL,_haslabel}(_data, _labels, _flagusing, _indices, Nmax, _reusemode, _haslabel)
     end
 
-    function AllocatedArray(a::AbstractVector{TG};
+    function PreallocatedArray(a::AbstractVector{TG};
         Nmax=1000, reusemode=false) where {TG<:AbstractVector}
         num = length(a)
         _flagusing = ones(Bool, num)
         _indices = collect(1:num)
-        return AllocatedArray(a, _flagusing, _indices, Nmax, reusemode)
+        return PreallocatedArray(a, _flagusing, _indices, Nmax, reusemode)
     end
 
-    function AllocatedArray(a::AbstractVector{TG}, labels::AbstractVector{labeltype};
+    function PreallocatedArray(a::AbstractVector{TG}, labels::AbstractVector{labeltype};
         Nmax=1000, reusemode=false) where {TG<:AbstractVector,labeltype}
         num = length(a)
 
@@ -63,33 +63,33 @@ mutable struct AllocatedArray{TG,TL,haslabel}
         _labels .= labels
         _flagusing = ones(Bool, num)
         _indices = collect(1:num)
-        return AllocatedArray(a, _flagusing, _indices, Nmax, reusemode)
+        return PreallocatedArray(a, _flagusing, _indices, Nmax, reusemode)
     end
 
 end
 
 
-set_reusemode!(t::AllocatedArray, reusemode) = t._reusemode = reusemode
+set_reusemode!(t::PreallocatedArray, reusemode) = t._reusemode = reusemode
 export set_reusemode!
 
-Base.eltype(::Type{AllocatedArray{TG}}) where {TG} = TG
+Base.eltype(::Type{PreallocatedArray{TG}}) where {TG} = TG
 
-Base.length(t::AllocatedArray) = length(t._data)
+Base.length(t::PreallocatedArray) = length(t._data)
 
-Base.size(t::AllocatedArray) = size(t._data)
+Base.size(t::PreallocatedArray) = size(t._data)
 
-function Base.firstindex(::AllocatedArray)
+function Base.firstindex(::PreallocatedArray)
     return 1
 end
 
-function Base.lastindex(t::AllocatedArray)
+function Base.lastindex(t::PreallocatedArray)
     return length(t._data)
 end
 
-function Base.getindex(t::AllocatedArray{TG}, i::Int) where {TG}
+function Base.getindex(t::PreallocatedArray{TG}, i::Int) where {TG}
     #display(t)
     if i > length(t._data)
-        @warn "The length of the AllocatedArray is shorter than the index $i. New temporal fields are created."
+        @warn "The length of the PreallocatedArray is shorter than the index $i. New temporal fields are created."
         ndiff = i - length(t._data)
         @assert i <= t.Nmax "The number of the tempralfields $i is larger than the maximum number $(Nmax). Change Nmax."
         for n = 1:ndiff
@@ -111,7 +111,7 @@ function Base.getindex(t::AllocatedArray{TG}, i::Int) where {TG}
     return t._data[t._indices[i]]
 end
 
-function Base.getindex(t::AllocatedArray{TG}, I::Vararg{Int,N}) where {TG,N}
+function Base.getindex(t::PreallocatedArray{TG}, I::Vararg{Int,N}) where {TG,N}
     data = TG[]
     for i in I
         push!(data, t[i])
@@ -119,7 +119,7 @@ function Base.getindex(t::AllocatedArray{TG}, I::Vararg{Int,N}) where {TG,N}
     return data
 end
 
-function Base.getindex(t::AllocatedArray{TG}, I::AbstractVector{T}) where {TG,T<:Integer}
+function Base.getindex(t::PreallocatedArray{TG}, I::AbstractVector{T}) where {TG,T<:Integer}
     data = TG[]
     for i in I
         push!(data, t[i])
@@ -127,7 +127,7 @@ function Base.getindex(t::AllocatedArray{TG}, I::AbstractVector{T}) where {TG,T<
     return data
 end
 
-function Base.display(t::AllocatedArray{TG,TF,false}) where {TG,TF}
+function Base.display(t::PreallocatedArray{TG,TF,false}) where {TG,TF}
     n = length(t._data)
     println("The total number of fields: $n")
     numused = sum(t._flagusing)
@@ -142,7 +142,7 @@ function Base.display(t::AllocatedArray{TG,TF,false}) where {TG,TF}
     println("The indices: $(t._indices)")
 end
 
-function Base.display(t::AllocatedArray{TG,TF,true}) where {TG,TF}
+function Base.display(t::PreallocatedArray{TG,TF,true}) where {TG,TF}
     n = length(t._data)
     println("The total number of fields: $n")
     numused = sum(t._flagusing)
@@ -158,7 +158,7 @@ function Base.display(t::AllocatedArray{TG,TF,true}) where {TG,TF}
     println("The labels: $(t._labels)")
 end
 
-function get_block(t::AllocatedArray{TG}) where {TG}
+function get_block(t::PreallocatedArray{TG}) where {TG}
     n = length(t._data)
     i = findfirst(x -> x == 0, t._indices)
     if i == nothing
@@ -169,7 +169,7 @@ function get_block(t::AllocatedArray{TG}) where {TG}
     return t[i], i
 end
 
-function new_block_withlabel(t::AllocatedArray{TG,TL,true}, label::TL) where {TG,TL}
+function new_block_withlabel(t::PreallocatedArray{TG,TL,true}, label::TL) where {TG,TL}
     ti, i = get_block(t)
     #not_undef = [i for i in eachindex(t._labels) if isassigned(t._labels, i)]
     #println(label)
@@ -181,12 +181,12 @@ function new_block_withlabel(t::AllocatedArray{TG,TL,true}, label::TL) where {TG
     return ti, i
 end
 
-function new_block_withlabel(t::AllocatedArray{TG,TL,false}, label::TL) where {TG,TL}
-    error("the AllocatedArray has no label.")
+function new_block_withlabel(t::PreallocatedArray{TG,TL,false}, label::TL) where {TG,TL}
+    error("the PreallocatedArray has no label.")
 end
 export new_block_withlabel
 
-function load_block_withlabel(t::AllocatedArray{TG,TL,true}, label::TL) where {TG,TL}
+function load_block_withlabel(t::PreallocatedArray{TG,TL,true}, label::TL) where {TG,TL}
     #not_undef = [i for i in eachindex(t._labels) if isassigned(t._labels, i)]
     index = findfirst(x -> x == label, t._labels)
     @assert index !== nothing "this label $(label) was not set! Something is wrong"
@@ -195,12 +195,12 @@ function load_block_withlabel(t::AllocatedArray{TG,TL,true}, label::TL) where {T
 end
 export load_block_withlabel
 
-function load_block_withlabel(t::AllocatedArray{TG,TL,false}, label::TL) where {TG,TL}
-    error("the AllocatedArray has no label.")
+function load_block_withlabel(t::PreallocatedArray{TG,TL,false}, label::TL) where {TG,TL}
+    error("the PreallocatedArray has no label.")
 end
 
 
-function get_block(t::AllocatedArray{TG}, num) where {TG}
+function get_block(t::PreallocatedArray{TG}, num) where {TG}
     n = length(t._data)
     i_s = Int64[]
     t_s = TG[]
@@ -212,7 +212,7 @@ function get_block(t::AllocatedArray{TG}, num) where {TG}
     return t_s, i_s
 end
 
-function unused!(t::AllocatedArray{TG}, i) where {TG}
+function unused!(t::PreallocatedArray{TG}, i) where {TG}
     if t._indices[i] != 0
         index = t._indices[i]
         t._flagusing[index] = false
@@ -221,19 +221,19 @@ function unused!(t::AllocatedArray{TG}, i) where {TG}
 end
 
 
-function unused!(t::AllocatedArray{TG}, I::AbstractVector{T}) where {TG,T<:Integer}
+function unused!(t::PreallocatedArray{TG}, I::AbstractVector{T}) where {TG,T<:Integer}
     for i in I
         unused!(t, i)
     end
 end
 
-function unused!(t::AllocatedArray{TG}) where {TG}
+function unused!(t::PreallocatedArray{TG}) where {TG}
     for i = 1:length(t)
         unused!(t, i)
     end
 end
 
 
-export AllocatedArray, unused!, get_block
+export PreallocatedArray, unused!, get_block
 
 end
