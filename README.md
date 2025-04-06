@@ -11,7 +11,7 @@
 ## Installation
 
 ```julia
-] add https://github.com/cometscome/PreallocatedArrays.jl
+] add PreallocatedArrays
 ```
 
 ## Main Features
