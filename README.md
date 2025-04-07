@@ -97,6 +97,7 @@ U =  Initialize_Gaugefields(3,0,4,4,4,4)
 a = PreallocatedArray(U,num=10)
 U1,it = get_block(a)
 ```
+To use a custom type, ```Base.similar``` should be defined for the custom type. 
 
 ## Important Functions
 
