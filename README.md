@@ -88,6 +88,15 @@ blockvec_labeled = PreallocatedArray(data, labels)
 display(blockvec_labeled)
 ```
 
+## Custum type
+You can use a custum type. 
+For example, if you want to treat the gaugefields in Gaugefields.jl, 
+```julia
+using Gaugefields
+U =  Initialize_Gaugefields(3,0,4,4,4,4)
+U1,it = get_block(a)
+```
+
 ## Important Functions
 
 ### 1. ```PreallocatedArray```
