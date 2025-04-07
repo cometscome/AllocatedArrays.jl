@@ -94,6 +94,7 @@ For example, if you want to treat the gaugefields in Gaugefields.jl,
 ```julia
 using Gaugefields
 U =  Initialize_Gaugefields(3,0,4,4,4,4)
+a = PreallocatedArray(U,num=10)
 U1,it = get_block(a)
 ```
 
